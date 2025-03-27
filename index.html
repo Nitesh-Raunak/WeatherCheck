@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather API</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      const API_KEY = "3218c86d5a6b420881360034252002"; // Ensure you replace this with a valid API key
+const BASE_URL = "https://api.weatherapi.com/v1/current.json"; // Changed to HTTPS for security
+
+document.addEventListener("DOMContentLoaded", function () {
+    const submitButton = document.getElementById("Submit");
+    const cityInput = document.getElementById("city");
+
+    if (!submitButton || !cityInput) {
+        console.error("Error: One or more required elements not found!");
+        return;
+    }
+
+    submitButton.addEventListener("click", (e) => {
+        e.preventDefault();
+        const city = cityInput.value.trim(); // Trim spaces to avoid empty input issues
+
+        if (!city) {
+            displayError("Please enter a city name.");
+            return;
+        }
+
+        getWeather(city);
+    });
+});
+
+const getWeather = (city) => {
+    const URL = `${BASE_URL}?key=${API_KEY}&q=${encodeURIComponent(city)}&aqi=no`;
+
+    fetch(URL)
+        .then((response) => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then((data) => {
+            if (data.error) {
+                displayError(`Error: ${data.error.message}`);
+                return;
+            }
+            updateWeatherUI(data);
+        })
+        .catch((error) => {
+            console.error("Error fetching weather data:", error);
+            displayError("Failed to fetch weather data. Please try again.");
+        });
+};
+
+const updateWeatherUI = (data) => {
+    // Checking if elements exist before updating them
+    if (!data || !data.location) {
+        displayError("Invalid data received from API.");
+        return;
+    }
+
+    document.getElementById("name").innerText = data.location.name || "N/A";
+    document.getElementById("region").innerText = data.location.region || "N/A";
+    document.getElementById("country").innerText = data.location.country || "N/A";
+    document.getElementById("lat").innerText = data.location.lat || "N/A";
+    document.getElementById("lon").innerText = data.location.lon || "N/A";
+    document.getElementById("tz").innerText = data.location.tz_id || "N/A";
+    // document.getElementById("local").innerText = data.location.localtime || "N/A";
+    document.getElementById("last_up").innerText = data.current.last_updated || "N/A";
+    document.getElementById("temp-c").innerText = data.current.temp_c || "N/A";
+    document.getElementById("temp-f").innerText = data.current.temp_f || "N/A";
+    document.getElementById("text").innerText = data.current.condition.text || "N/A";
+    document.getElementById("icon").innerText = data.current.condition.icon || "N/A";
+
+     // Handle weather icon
+     const iconElement = document.getElementById("icon");
+     if (iconElement) {
+         const iconUrl = `https:${data.current.condition.icon}`; // Ensure it includes 'https:'
+         iconElement.src = iconUrl;
+     }
+
+    // Clearing any previous error messages
+    displayError(""); 
+};
+
+const displayError = (message) => {
+    const errorDiv = document.getElementById("error-message");
+    if (errorDiv) {
+        errorDiv.innerText = message;
+        errorDiv.classList.toggle("hidden", message === ""); // Hide if no error
+    }
+};
+
+    </script> <!-- Fixed the script tag -->
+</head>
+
+<body class="bg-gray-100 min-h-screen flex flex-col items-center">
+
+    <!-- Navbar -->
+    <nav class="bg-blue-600 w-full p-4 shadow-md">
+        <div class="container mx-auto flex justify-between items-center">
+            <!-- Logo -->
+            <a href="index.html" class="flex items-center space-x-3 text-white text-2xl font-bold">
+                <img src="logo.jpeg" alt="Weather Logo" class="h-10 w-10 rounded-full object-cover">
+                <span>Weather Check</span>
+            </a>
+            
+            <!-- Search Bar -->
+            <div class="flex items-center space-x-2">
+                <input type="text" id="city" placeholder="Enter city name"
+                    class="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-400 outline-none">
+                <button id="Submit"
+                    class="bg-white text-blue-600 px-4 py-2 rounded-lg hover:bg-gray-200 font-semibold">Get Weather</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Error Message -->
+    <div id="error-message" class="text-red-600 mt-4 text-lg font-semibold"></div>
+
+    <!-- Weather Information -->
+    <div class="bg-white mt-10 p-6 rounded-xl shadow-lg border border-gray-300 w-full max-w-md">
+        <h2 class="text-blue-600 text-2xl font-bold text-center border-b-2 border-blue-400 pb-2">
+            Weather in <span id="name" class="font-semibold"></span>
+        </h2>
+        <ul class="mt-4 space-y-2 text-gray-700">
+            <li class="flex justify-between border-b py-2">🌍 Region: <span class="font-semibold" id="region"></span></li>
+            <li class="flex justify-between border-b py-2">🌍 Country: <span class="font-semibold" id="country"></span></li>
+            <li class="flex justify-between border-b py-2">📍 Latitude: <span class="font-semibold" id="lat"></span></li>
+            <li class="flex justify-between border-b py-2">📍 Longitude: <span class="font-semibold" id="lon"></span></li>
+            <li class="flex justify-between border-b py-2">🕒 Timezone: <span class="font-semibold" id="tz"></span></li>
+            <li class="flex justify-between border-b py-2">🗓 Last Updated: <span class="font-semibold" id="last_up"></span></li>
+            <li class="flex justify-between border-b py-2">🌡 Temperature (°C): <span class="font-semibold" id="temp-c"></span></li>
+            <li class="flex justify-between border-b py-2">🌡 Temperature (°F): <span class="font-semibold" id="temp-f"></span></li>
+            <li class="flex justify-between border-b py-2">Cloud: <span class="font-semibold" id="text"></span></li>
+            <img id="icon"  alt="Weather Icon"  class="h-20 w-20 mx-auto mt-4">
+
+        </ul>
+    </div>
+
+</body>
+
+</html>
+
+
+
+
+
+    
+
+    
